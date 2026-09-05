@@ -62,6 +62,35 @@ instead of playing it - at most 25 in a row, so a feed of nothing but repeats
 stops rather than scrolling forever. The chosen playback speed is re-applied on
 every `play` and `loadeddata`, because YouTube resets the rate per video.
 
+## Releases
+
+Pushing to `main` runs `.github/workflows/release.yml`, which typechecks and
+then hands over to semantic-release. The version comes from the commit
+messages since the last tag, following the conventional-commit types this repo
+already uses: `feat` gives a minor bump, `fix` and `perf` a patch, and a
+`BREAKING CHANGE:` footer a major. A push with only `chore`, `ci`, or `test`
+commits releases nothing.
+
+Each release then gets:
+
+- a `CHANGELOG.md` entry, grouped into Features, Bug Fixes, Performance,
+  Reverts, and Refactoring
+- a GitHub release and a `v<version>` tag with the same notes
+- `yt-shorts-autoscroll-<version>.zip` attached to it - the contents of
+  `dist/`, ready to load unpacked or upload to the Web Store
+- a `chore: release <version>` commit carrying the bumped `package.json`,
+  `public/manifest.json`, and the changelog
+
+`scripts/prepare-release.mjs` stamps the version into `public/manifest.json`
+and builds the zip. It rewrites only the version line, so a release commit
+shows a one-line manifest diff, and it drops any prerelease suffix on the way
+in - Chrome accepts one to four dot-separated integers and nothing else, so
+`1.2.0-beta.1` reaches the manifest as `1.2.0` while the zip keeps the full
+version.
+
+Nothing is published to npm; `package.json` is `private` and the npm plugin
+only bumps the version field.
+
 ## Layout
 
 Sources live at the repo root; `dist/` is the extension itself.
@@ -74,6 +103,11 @@ public/manifest.json MV3 manifest (paths relative to dist/)
 public/popup/        popup markup and styles
 public/icons/        extension icons
 scripts/build.mjs    tsc + copy public/ -> dist/
+scripts/prepare-release.mjs
+                     stamps the version, builds, zips dist/ for a release
+.releaserc.json      semantic-release plugins
+.github/workflows/release.yml
+                     runs semantic-release on every push to main
 ```
 
 ```
