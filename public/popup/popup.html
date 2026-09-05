@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en">
+  <!-- Text here is the English fallback; popup.ts swaps in _locales strings. -->
   <head>
     <meta charset="utf-8" />
-    <title>YT Shorts Autoscroll</title>
+    <title data-i18n="extName">YT Shorts Autoscroll</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header>
       <img class="logo" src="../icons/icon48.png" alt="" width="20" height="20" />
-      <h1>Shorts Autoscroll</h1>
+      <h1 data-i18n="popupHeading">Shorts Autoscroll</h1>
       <label class="switch">
-        <input type="checkbox" id="enabled" />
+        <input type="checkbox" id="enabled" data-i18n-aria="toggleLabel" />
         <span class="slider"></span>
       </label>
     </header>
@@ -18,7 +19,7 @@
     <p class="hint" id="status">Scrolls to the next Short when this one finishes.</p>
 
     <div class="row">
-      <label for="playCount">Play each Short</label>
+      <label for="playCount" data-i18n="playCountLabel">Play each Short</label>
       <span class="control">
         <input type="number" id="playCount" min="1" max="20" step="1" />
         <span class="unit" id="playCountUnit">time</span>
@@ -26,15 +27,15 @@
     </div>
 
     <div class="row">
-      <label for="delayMs">Wait before scrolling</label>
+      <label for="delayMs" data-i18n="delayLabel">Wait before scrolling</label>
       <span class="control">
         <input type="number" id="delayMs" min="0" max="10000" step="100" />
-        <span class="unit">ms</span>
+        <span class="unit" data-i18n="delayUnit">ms</span>
       </span>
     </div>
 
     <div class="row">
-      <label for="playbackRate">Playback speed</label>
+      <label for="playbackRate" data-i18n="speedLabel">Playback speed</label>
       <span class="control">
         <select id="playbackRate">
           <option value="0.75">0.75x</option>
@@ -48,7 +49,7 @@
     </div>
 
     <div class="row">
-      <label for="skipSeen">Skip Shorts I've seen</label>
+      <label for="skipSeen" data-i18n="skipSeenLabel">Skip Shorts I've seen</label>
       <label class="switch">
         <input type="checkbox" id="skipSeen" />
         <span class="slider"></span>

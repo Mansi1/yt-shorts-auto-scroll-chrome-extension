@@ -1,0 +1,41 @@
+{
+  "extName": {
+    "message": "YT Shorts Autoscroll"
+  },
+  "extDescription": {
+    "message": "Avanza automáticamente al siguiente Short de YouTube cuando termina el actual."
+  },
+  "popupHeading": {
+    "message": "Shorts Autoscroll"
+  },
+  "toggleLabel": {
+    "message": "Activar o desactivar el avance automático"
+  },
+  "statusOn": {
+    "message": "Avanza al siguiente Short cuando este termina."
+  },
+  "statusOff": {
+    "message": "En pausa - los Shorts seguirán repitiéndose."
+  },
+  "playCountLabel": {
+    "message": "Reproducir cada Short"
+  },
+  "playCountUnitOne": {
+    "message": "vez"
+  },
+  "playCountUnitOther": {
+    "message": "veces"
+  },
+  "delayLabel": {
+    "message": "Esperar antes de avanzar"
+  },
+  "delayUnit": {
+    "message": "ms"
+  },
+  "speedLabel": {
+    "message": "Velocidad de reproducción"
+  },
+  "skipSeenLabel": {
+    "message": "Omitir los Shorts que ya he visto"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "extName": {
+    "message": "YT Shorts Autoscroll",
+    "description": "Extension name, shown in the toolbar, chrome://extensions and the Web Store. A product name - usually left untranslated."
+  },
+  "extDescription": {
+    "message": "Automatically scrolls to the next YouTube Short when the current one finishes playing.",
+    "description": "Extension description, shown in chrome://extensions and the Web Store. Max 132 characters."
+  },
+  "popupHeading": {
+    "message": "Shorts Autoscroll",
+    "description": "Heading at the top of the popup. Shorter than extName because the popup is only 300px wide."
+  },
+  "toggleLabel": {
+    "message": "Turn autoscroll on or off",
+    "description": "Accessible name of the master on/off switch in the popup header. Never shown on screen, only read by screen readers."
+  },
+  "statusOn": {
+    "message": "Scrolls to the next Short when this one finishes.",
+    "description": "Text under the heading while the extension is on."
+  },
+  "statusOff": {
+    "message": "Paused - Shorts will keep looping.",
+    "description": "Text under the heading while the extension is off."
+  },
+  "playCountLabel": {
+    "message": "Play each Short",
+    "description": "Label for the number input choosing how many times a Short plays before moving on. Followed by the number and playCountUnitOne/Other, reading e.g. \"Play each Short  2 times\"."
+  },
+  "playCountUnitOne": {
+    "message": "time",
+    "description": "Unit after the play count when it is exactly 1. Chrome's i18n has no plural rules, so each form is its own message."
+  },
+  "playCountUnitOther": {
+    "message": "times",
+    "description": "Unit after the play count when it is 2 or more. See playCountUnitOne."
+  },
+  "delayLabel": {
+    "message": "Wait before scrolling",
+    "description": "Label for the number input holding the pause between a Short finishing and the scroll."
+  },
+  "delayUnit": {
+    "message": "ms",
+    "description": "Abbreviation for milliseconds, shown after the delay input."
+  },
+  "speedLabel": {
+    "message": "Playback speed",
+    "description": "Label for the dropdown choosing playback speed. The options themselves (1x, 1.5x, ...) are numbers and are not translated."
+  },
+  "skipSeenLabel": {
+    "message": "Skip Shorts I've seen",
+    "description": "Label for the switch that jumps past Shorts already watched. First person, matching the user's point of view."
+  }
+}

@@ -62,6 +62,43 @@ instead of playing it - at most 25 in a row, so a feed of nothing but repeats
 stops rather than scrolling forever. The chosen playback speed is re-applied on
 every `play` and `loadeddata`, because YouTube resets the rate per video.
 
+## Translations
+
+The UI ships in English, German, and Spanish. Chrome picks the catalog from
+`public/_locales/<locale>/messages.json` based on the browser's language and
+falls back to `en`, the `default_locale`, for anything missing.
+
+Strings reach the UI two ways. The manifest uses `__MSG_extName__` style
+placeholders, which Chrome substitutes as it loads the extension. The popup
+carries its English text in `popup.html` as a fallback and marks each element
+with `data-i18n="<key>"` (or `data-i18n-aria` for a screen-reader label);
+`translate()` in `src/popup.ts` swaps in the localized string on open and sets
+`<html lang>` from `chrome.i18n.getUILanguage()`. Text that changes at runtime
+- the on/off status line and the singular/plural play-count unit - is looked up
+by key in `render()` instead.
+
+To add a locale, copy `public/_locales/en/messages.json` into a new folder named
+for the locale code, translate every `message` value, and leave the keys and the
+`description` notes alone. Then:
+
+```bash
+npm run check:locales
+```
+
+That compares every catalog against `en` and fails on a missing, empty, or
+unknown key, on a `__MSG_` placeholder the manifest uses but `en` does not
+define, and on a `$PLACEHOLDER$` dropped in translation. Chrome silently falls
+back to English in all of those cases, so nothing else would tell you a
+translation went stale. The release workflow runs it on every push.
+
+Two things worth knowing when translating:
+
+- Chrome has no plural rules, so each form is its own key
+  (`playCountUnitOne` / `playCountUnitOther`). German uses "Mal" for both,
+  Spanish "vez" and "veces".
+- The popup is 300px wide and labels wrap, but a long compound word can still
+  overflow - prefer "Wiedergabetempo" over "Wiedergabegeschwindigkeit".
+
 ## Releases
 
 Pushing to `main` runs `.github/workflows/release.yml`, which typechecks and
@@ -102,7 +139,10 @@ src/popup.ts         popup logic
 public/manifest.json MV3 manifest (paths relative to dist/)
 public/popup/        popup markup and styles
 public/icons/        extension icons
+public/_locales/     en, de, es message catalogs
 scripts/build.mjs    tsc + copy public/ -> dist/
+scripts/check-locales.mjs
+                     checks every locale against en
 scripts/prepare-release.mjs
                      stamps the version, builds, zips dist/ for a release
 .releaserc.json      semantic-release plugins

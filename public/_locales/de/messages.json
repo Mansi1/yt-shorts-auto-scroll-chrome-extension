@@ -1,0 +1,41 @@
+{
+  "extName": {
+    "message": "YT Shorts Autoscroll"
+  },
+  "extDescription": {
+    "message": "Scrollt automatisch zum nächsten YouTube Short, sobald der aktuelle zu Ende gespielt ist."
+  },
+  "popupHeading": {
+    "message": "Shorts Autoscroll"
+  },
+  "toggleLabel": {
+    "message": "Autoscroll ein- oder ausschalten"
+  },
+  "statusOn": {
+    "message": "Scrollt zum nächsten Short, sobald dieser zu Ende ist."
+  },
+  "statusOff": {
+    "message": "Pausiert - Shorts laufen weiter in Schleife."
+  },
+  "playCountLabel": {
+    "message": "Jeden Short abspielen"
+  },
+  "playCountUnitOne": {
+    "message": "Mal"
+  },
+  "playCountUnitOther": {
+    "message": "Mal"
+  },
+  "delayLabel": {
+    "message": "Warten vor dem Scrollen"
+  },
+  "delayUnit": {
+    "message": "ms"
+  },
+  "speedLabel": {
+    "message": "Wiedergabetempo"
+  },
+  "skipSeenLabel": {
+    "message": "Gesehene Shorts überspringen"
+  }
+}

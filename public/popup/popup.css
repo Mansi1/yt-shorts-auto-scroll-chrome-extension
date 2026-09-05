@@ -19,7 +19,8 @@
 * { box-sizing: border-box; }
 
 body {
-  width: 268px;
+  /* Wide enough for the longest translated labels; see _locales/. */
+  width: 300px;
   margin: 0;
   padding: 14px 16px 16px;
   background: var(--bg);
@@ -59,6 +60,13 @@ h1 {
   gap: 12px;
   padding: 9px 0;
   border-top: 1px solid var(--line);
+}
+
+/* Translated labels run longer than the English ones - let them wrap. */
+.row > label:first-child {
+  min-width: 0;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .control {

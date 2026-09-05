@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "YT Shorts Autoscroll",
+  "name": "__MSG_extName__",
   "version": "1.0.0",
-  "description": "Automatically scrolls to the next YouTube Short when the current one finishes playing.",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -10,7 +11,7 @@
   },
   "permissions": ["storage"],
   "action": {
-    "default_title": "YT Shorts Autoscroll",
+    "default_title": "__MSG_extName__",
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",

@@ -32,6 +32,8 @@ jobs:
 
       - run: npm run typecheck
 
+      - run: npm run check:locales
+
       - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
