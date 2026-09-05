@@ -17,6 +17,8 @@
   const COOLDOWN_MS = 1200; // ignore finishes right after we advance
   const POLL_MS = 400; // how often we re-check which video is active
   const MAX_SKIPS = 25; // consecutive seen Shorts to jump before giving up
+  const TRAIL_LIMIT = 100; // Shorts of this tab's route we keep for direction
+  const GESTURE_MS = 1500; // how long a scroll gesture explains a navigation
 
   let settings: Settings = { ...DEFAULT_SETTINGS };
   let video: HTMLVideoElement | null = null;
@@ -30,6 +32,11 @@
   let seenSet = new Set<string>();
   let seenReady = false; // history loaded - writing before this would erase it
   let skips = 0; // seen Shorts jumped in a row
+
+  let trail: string[] = []; // Shorts visited in this tab, in order
+  let trailIndex = -1; // where in that trail we are now
+  let lastUp = 0; // timestamp of the last upward scroll gesture
+  let lastDown = 0; // ... and the last downward one
 
   /* ---------------------------------------------------------------- helpers */
 
@@ -115,6 +122,58 @@
     saveSeen(seenIds);
   }
 
+  /* -------------------------------------------------------------- direction */
+
+  /**
+   * Records which way the user last asked to move. Our own advance dispatches
+   * an ArrowDown, so only trusted events count - a synthetic one would read as
+   * the user scrolling down and defeat the check below.
+   */
+  function onWheel(e: WheelEvent): void {
+    if (!e.isTrusted || Math.abs(e.deltaY) < 1) return;
+    if (e.deltaY < 0) lastUp = Date.now();
+    else lastDown = Date.now();
+  }
+
+  function onKeyDown(e: KeyboardEvent): void {
+    if (!e.isTrusted) return;
+    if (e.key === "ArrowUp" || e.key === "PageUp" || e.key === "Home") lastUp = Date.now();
+    else if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === "End") lastDown = Date.now();
+  }
+
+  const gestureWasUp = (): boolean =>
+    lastUp > lastDown && Date.now() - lastUp < GESTURE_MS;
+
+  /**
+   * Moves the trail onto `id` and reports whether that was a step back up the
+   * feed.
+   *
+   * The trail answers it exactly for any Short already on it, including when
+   * YouTube's own up chevron is used, which fires no scroll event at all. For
+   * a Short the trail has never held, the last scroll gesture is the best
+   * evidence there is.
+   */
+  function stepTrail(id: string): boolean {
+    if (trail[trailIndex] === id) return false; // re-checking the same Short
+    if (trailIndex > 0 && trail[trailIndex - 1] === id) {
+      trailIndex -= 1;
+      return true;
+    }
+    if (trail[trailIndex + 1] === id) {
+      trailIndex += 1;
+      return false;
+    }
+
+    const backwards = gestureWasUp();
+    trail.splice(trailIndex + 1, trail.length, id);
+    trailIndex = trail.length - 1;
+    if (trail.length > TRAIL_LIMIT) {
+      trail.shift();
+      trailIndex -= 1;
+    }
+    return backwards;
+  }
+
   /** True when this Short has been watched before and should be jumped over. */
   function shouldSkip(id: string): boolean {
     return (
@@ -183,6 +242,7 @@
 
   function tick(): void {
     if (!onShorts()) {
+      if (shortId) remember(shortId); // leaving the feed finishes that Short
       detach();
       shortId = null;
       return;
@@ -193,21 +253,28 @@
 
     const id = currentShortId();
     const isNewShort = id !== shortId;
-    shortId = id;
 
-    if (isNewShort && id && shouldSkip(id)) {
-      // Jump straight past it; the next tick picks up whatever we land on.
-      skips += 1;
-      detach();
-      clearTimeout(pendingAdvance);
-      lastAdvance = Date.now();
-      goNext();
-      return;
-    }
+    if (isNewShort) {
+      // A Short counts as seen once you move off it, not when you land on it.
+      // Marking on arrival meant the one you were watching was already in the
+      // history, so scrolling back up to it would skip it away again.
+      if (shortId) remember(shortId);
 
-    if (isNewShort && id) {
+      const backwards = id ? stepTrail(id) : false;
+      shortId = id;
+
+      // Only ever skip forwards. Scrolling up is a deliberate request for that
+      // Short, seen or not, and skipping would drag the user straight back.
+      if (!backwards && id && shouldSkip(id)) {
+        // Jump straight past it; the next tick picks up whatever we land on.
+        skips += 1;
+        detach();
+        clearTimeout(pendingAdvance);
+        lastAdvance = Date.now();
+        goNext();
+        return;
+      }
       skips = 0;
-      remember(id);
     }
 
     if (active !== video || isNewShort) attach(active);
@@ -215,6 +282,8 @@
 
   setInterval(tick, POLL_MS);
   document.addEventListener("yt-navigate-finish", tick);
+  addEventListener("wheel", onWheel, { capture: true, passive: true });
+  addEventListener("keydown", onKeyDown, true);
   tick();
 
   /* --------------------------------------------------------------- settings */

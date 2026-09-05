@@ -57,11 +57,23 @@ A short cooldown after each advance prevents double skips, and the active video
 is re-detected on a 400ms poll plus YouTube's `yt-navigate-finish` event, since
 Shorts is a single-page app that swaps video elements as you scroll.
 
-Each Short reached is recorded by the video id in its URL. With "skip seen" on,
-landing on an id that is already in the history advances again immediately
-instead of playing it - at most 25 in a row, so a feed of nothing but repeats
-stops rather than scrolling forever. The chosen playback speed is re-applied on
-every `play` and `loadeddata`, because YouTube resets the rate per video.
+A Short is recorded by the video id in its URL once you move off it, not when
+you land on it - marking it on arrival would put the Short you are currently
+watching straight into the history. With "skip seen" on, arriving at an id that
+is already in the history advances again immediately instead of playing it, at
+most 25 in a row, so a feed of nothing but repeats stops rather than scrolling
+forever.
+
+Skipping only ever happens going forwards: scrolling back up to a Short is a
+deliberate request for it, seen or not. Direction comes from a trail of the
+Shorts visited in the tab, which is exact for anything already on it - including
+YouTube's own up chevron, which fires no scroll event - and from the last wheel
+or arrow-key gesture for a Short the trail has never held. Only trusted events
+count there, since advancing dispatches an `ArrowDown` of its own that would
+otherwise read as the user scrolling down.
+
+The chosen playback speed is re-applied on every `play` and `loadeddata`,
+because YouTube resets the rate per video.
 
 ## Translations
 
