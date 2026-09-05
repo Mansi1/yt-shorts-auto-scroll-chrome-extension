@@ -37,5 +37,11 @@
   },
   "skipSeenLabel": {
     "message": "Omitir los Shorts que ya he visto"
+  },
+  "languageLabel": {
+    "message": "Idioma"
+  },
+  "languageAuto": {
+    "message": "Idioma del navegador"
   }
 }

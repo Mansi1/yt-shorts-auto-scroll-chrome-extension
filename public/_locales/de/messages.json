@@ -37,5 +37,11 @@
   },
   "skipSeenLabel": {
     "message": "Gesehene Shorts überspringen"
+  },
+  "languageLabel": {
+    "message": "Sprache"
+  },
+  "languageAuto": {
+    "message": "Browsersprache"
   }
 }

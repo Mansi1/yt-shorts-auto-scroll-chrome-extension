@@ -14,19 +14,17 @@
   const delayMs = $<HTMLInputElement>("delayMs");
   const playbackRate = $<HTMLSelectElement>("playbackRate");
   const skipSeen = $<HTMLInputElement>("skipSeen");
+  const language = $<HTMLSelectElement>("language");
   const status = $<HTMLParagraphElement>("status");
 
   /* ---------------------------------------------------------------- i18n */
 
   /**
-   * Looks up a string from _locales. Returns "" for an unknown key, which the
-   * callers treat as "keep whatever English text is already in popup.html".
+   * Fills in every [data-i18n] / [data-i18n-aria] element in the markup. An
+   * unknown key leaves the English text that popup.html already carries.
    */
-  const t = (key: string): string => chrome.i18n.getMessage(key);
-
-  /** Fills in every [data-i18n] / [data-i18n-aria] element in the markup. */
   function translate(): void {
-    document.documentElement.lang = chrome.i18n.getUILanguage();
+    document.documentElement.lang = activeLanguageTag();
 
     for (const el of document.querySelectorAll<HTMLElement>("[data-i18n]")) {
       const message = t(el.dataset.i18n ?? "");
@@ -50,6 +48,8 @@
     playCount.value = String(s.playCount);
     delayMs.value = String(s.delayMs);
     playbackRate.value = String(s.playbackRate);
+    language.value = s.language;
+    if (!language.value) language.value = DEFAULT_SETTINGS.language;
     // A stored speed with no matching <option> would leave the select blank.
     if (!playbackRate.value) playbackRate.value = String(DEFAULT_SETTINGS.playbackRate);
     skipSeen.checked = s.skipSeen;
@@ -67,15 +67,22 @@
       playCount: clamp(playCount, DEFAULT_SETTINGS.playCount),
       delayMs: clamp(delayMs, DEFAULT_SETTINGS.delayMs),
       skipSeen: skipSeen.checked,
-      playbackRate: Number(playbackRate.value) || DEFAULT_SETTINGS.playbackRate
+      playbackRate: Number(playbackRate.value) || DEFAULT_SETTINGS.playbackRate,
+      language: language.value
     };
-    chrome.storage.sync.set(s, () => render(s));
+    chrome.storage.sync.set(s, () => void show(s));
   }
 
-  translate();
-  void loadSettings().then(render);
+  /** Loads the chosen language, then paints the popup with it. */
+  async function show(s: Settings): Promise<void> {
+    await loadLanguage(s.language);
+    translate();
+    render(s);
+  }
 
-  for (const input of [enabled, playCount, delayMs, playbackRate, skipSeen]) {
+  void loadSettings().then(show);
+
+  for (const input of [enabled, playCount, delayMs, playbackRate, skipSeen, language]) {
     input.addEventListener("change", save);
   }
 })();

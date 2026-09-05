@@ -50,5 +50,13 @@
   "skipSeenLabel": {
     "message": "Skip Shorts I've seen",
     "description": "Label for the switch that jumps past Shorts already watched. First person, matching the user's point of view."
+  },
+  "languageLabel": {
+    "message": "Language",
+    "description": "Label for the dropdown choosing the popup's language."
+  },
+  "languageAuto": {
+    "message": "Browser language",
+    "description": "First option in the language dropdown: follow whatever language Chrome itself is set to. The other options are language names in their own language and are not translated."
   }
 }

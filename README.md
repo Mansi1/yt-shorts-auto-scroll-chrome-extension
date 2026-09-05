@@ -34,6 +34,7 @@ Click the toolbar icon:
 | Wait before scrolling | 0 ms | Pause between the finish and the scroll |
 | Playback speed | 1x | Speed every Short plays at, 0.75x - 2x |
 | Skip Shorts I've seen | off | Jump straight past a Short that has played before |
+| Language | Browser language | Language of the popup itself; see Translations |
 
 Settings live in `chrome.storage.sync`, so they follow your Chrome profile and
 apply immediately to any open Shorts tab. The watched-Shorts history behind
@@ -68,6 +69,15 @@ The UI ships in English, German, and Spanish. Chrome picks the catalog from
 `public/_locales/<locale>/messages.json` based on the browser's language and
 falls back to `en`, the `default_locale`, for anything missing.
 
+The **Language** dropdown overrides that choice for the popup. Because
+`chrome.i18n.getMessage` is fixed to the browser's UI locale and cannot be
+pointed at another one, `src/i18n.ts` reads the catalog out of `_locales`
+itself when a language is picked, falling back to the English catalog for a
+missing key and to `chrome.i18n` if a catalog will not load. On "Browser
+language" it does nothing and Chrome stays in charge. The extension's name and
+description in `chrome://extensions` come from the manifest, so they follow the
+browser and not this dropdown.
+
 Strings reach the UI two ways. The manifest uses `__MSG_extName__` style
 placeholders, which Chrome substitutes as it loads the extension. The popup
 carries its English text in `popup.html` as a fallback and marks each element
@@ -79,7 +89,9 @@ by key in `render()` instead.
 
 To add a locale, copy `public/_locales/en/messages.json` into a new folder named
 for the locale code, translate every `message` value, and leave the keys and the
-`description` notes alone. Then:
+`description` notes alone. Add the code to `LANGUAGES` in `src/i18n.ts` and an
+`<option>` to the language dropdown in `public/popup/popup.html`, labelled in
+its own language. Then:
 
 ```bash
 npm run check:locales
@@ -134,6 +146,7 @@ Sources live at the repo root; `dist/` is the extension itself.
 
 ```
 src/settings.ts      shared Settings type + storage helper
+src/i18n.ts          popup message lookup with a language override
 src/content.ts       finish detection and scrolling
 src/popup.ts         popup logic
 public/manifest.json MV3 manifest (paths relative to dist/)

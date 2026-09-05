@@ -16,6 +16,12 @@ interface Settings {
   skipSeen: boolean;
   /** Playback speed applied to every Short, e.g. 1.5 for 1.5x. */
   playbackRate: number;
+  /**
+   * Popup language: "auto" follows the browser, otherwise a locale code with a
+   * catalog in _locales. Kept as a string so content.ts, which has no UI, does
+   * not have to know which locales exist.
+   */
+  language: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -23,7 +29,8 @@ const DEFAULT_SETTINGS: Settings = {
   playCount: 1,
   delayMs: 0,
   skipSeen: false,
-  playbackRate: 1
+  playbackRate: 1,
+  language: "auto"
 };
 
 /** Reads settings from sync storage, filling in anything missing. */
