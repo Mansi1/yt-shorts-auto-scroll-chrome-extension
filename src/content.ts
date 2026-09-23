@@ -9,6 +9,9 @@
  *
  * Every Short reached is recorded by video id; with "skip seen" on, landing on
  * a recorded id advances again straight away instead of replaying it.
+ *
+ * In a background tab YouTube can sit on the "next" request until the tab is
+ * shown again, so there the next Short's URL is loaded directly instead.
  */
 (() => {
   "use strict";
@@ -19,6 +22,7 @@
   const MAX_SKIPS = 25; // consecutive seen Shorts to jump before giving up
   const TRAIL_LIMIT = 100; // Shorts of this tab's route we keep for direction
   const GESTURE_MS = 1500; // how long a scroll gesture explains a navigation
+  const JUMP_MS = 2000; // how long a hidden tab gets to advance before we load the URL
 
   let settings: Settings = { ...DEFAULT_SETTINGS };
   let video: HTMLVideoElement | null = null;
@@ -27,6 +31,7 @@
   let plays = 0; // completed plays of the current Short
   let lastAdvance = 0;
   let pendingAdvance: number | undefined;
+  let pendingJump: number | undefined;
 
   let seenIds: string[] = []; // watched Short ids, oldest first
   let seenSet = new Set<string>();
@@ -95,6 +100,49 @@
     findScroller()?.scrollBy({ top: window.innerHeight, behavior: "smooth" });
   }
 
+  /**
+   * Loads the next Short's page outright. The upcoming ids live in YouTube's
+   * page data, which page-sequence.ts copies onto <html> on request; with
+   * "skip seen" on, the first one not watched yet is picked. With no sequence
+   * to go on, a fresh Shorts feed will do.
+   */
+  function jumpToNext(): void {
+    const current = currentShortId();
+    document.dispatchEvent(new CustomEvent("ytss-read-sequence"));
+    let ids: string[] = [];
+    try {
+      ids = JSON.parse(document.documentElement.dataset.ytssSequence ?? "[]");
+    } catch {
+      // Unreadable - treat as no sequence.
+    }
+    // The Short the page opened on is not in the list, so -1 + 1 starts at 0.
+    const upcoming = ids.slice((current ? ids.indexOf(current) : -1) + 1);
+    const next =
+      (settings.skipSeen && upcoming.find((id) => !seenSet.has(id))) || upcoming[0];
+
+    // The reload restarts this script, so the usual record-on-leaving in tick()
+    // would never run for the Short we are on.
+    if (current) remember(current);
+    location.assign(next ? `/shorts/${next}` : "/shorts");
+  }
+
+  /**
+   * Moves to the next Short. A hidden tab paints no frames, and YouTube can
+   * wait for one before it swaps Shorts, looping the current one until the
+   * tab is shown again. If that happens, fall back to loading the next URL.
+   */
+  function advance(): void {
+    goNext();
+    clearTimeout(pendingJump);
+    if (!document.hidden) return;
+    const from = currentShortId();
+    pendingJump = setTimeout(() => {
+      if (document.hidden && settings.enabled && onShorts() && currentShortId() === from) {
+        jumpToNext();
+      }
+    }, JUMP_MS);
+  }
+
   function finished(): void {
     if (!settings.enabled) return;
     if (Date.now() - lastAdvance < COOLDOWN_MS) return;
@@ -104,7 +152,7 @@
 
     lastAdvance = Date.now();
     clearTimeout(pendingAdvance);
-    pendingAdvance = setTimeout(goNext, Math.max(0, settings.delayMs));
+    pendingAdvance = setTimeout(advance, Math.max(0, settings.delayMs));
   }
 
   /* ------------------------------------------------------------- seen Shorts */
@@ -271,7 +319,7 @@
         detach();
         clearTimeout(pendingAdvance);
         lastAdvance = Date.now();
-        goNext();
+        advance();
         return;
       }
       skips = 0;
@@ -317,6 +365,9 @@
       settings.playbackRate = Number(changes.playbackRate.newValue);
       applyRate();
     }
-    if (!settings.enabled) clearTimeout(pendingAdvance);
+    if (!settings.enabled) {
+      clearTimeout(pendingAdvance);
+      clearTimeout(pendingJump);
+    }
   });
 })();

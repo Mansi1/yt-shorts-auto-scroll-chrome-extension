@@ -75,6 +75,15 @@ otherwise read as the user scrolling down.
 The chosen playback speed is re-applied on every `play` and `loadeddata`,
 because YouTube resets the rate per video.
 
+A background tab paints no frames, and YouTube can hold the "next" request
+until the tab is shown again, leaving the current Short on repeat. So when the
+tab is hidden and the Short has not changed 2s after advancing, the next
+Short's URL is loaded outright. The upcoming ids live in YouTube's page data,
+out of reach of the content script's isolated world, so `src/page-sequence.ts`
+runs in the page's world and copies them onto `<html>` when asked. With "skip
+seen" on, the first unwatched id is chosen; with no sequence available, it
+loads a fresh `/shorts` feed.
+
 ## Translations
 
 The UI ships in English, German, and Spanish. Chrome picks the catalog from
@@ -160,6 +169,7 @@ Sources live at the repo root; `dist/` is the extension itself.
 src/settings.ts      shared Settings type + storage helper
 src/i18n.ts          popup message lookup with a language override
 src/content.ts       finish detection and scrolling
+src/page-sequence.ts reads the upcoming Shorts from the page (page world)
 src/popup.ts         popup logic
 public/manifest.json MV3 manifest (paths relative to dist/)
 public/popup/        popup markup and styles
