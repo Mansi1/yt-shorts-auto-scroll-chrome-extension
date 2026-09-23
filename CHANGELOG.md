@@ -1,3 +1,17 @@
+## [1.2.0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/compare/v1.1.0...v1.2.0) (2026-09-23)
+
+### Features
+
+* add an option to pause Shorts in background tabs ([f6857d8](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/commit/f6857d8f620c7197c4795820f71066a3d05099c3))
+
+### Bug Fixes
+
+* advance to the next Short in background tabs ([cdbbe94](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/commit/cdbbe942f14f91511028a5cf8f15ba3d9fce0917))
+
+### Refactoring
+
+* mark a Short seen on leaving and never skip backwards ([74b253f](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/commit/74b253f902a3874430f33d9c0c3eb11b129aca0c))
+
 ## [1.1.0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/compare/v1.0.0...v1.1.0) (2026-09-05)
 
 ### Features
