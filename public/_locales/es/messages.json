@@ -38,6 +38,9 @@
   "skipSeenLabel": {
     "message": "Omitir los Shorts que ya he visto"
   },
+  "pauseInBackgroundLabel": {
+    "message": "Pausar en segundo plano"
+  },
   "languageLabel": {
     "message": "Idioma"
   },

@@ -51,6 +51,10 @@
     "message": "Skip Shorts I've seen",
     "description": "Label for the switch that jumps past Shorts already watched. First person, matching the user's point of view."
   },
+  "pauseInBackgroundLabel": {
+    "message": "Pause in background tabs",
+    "description": "Label for the switch that pauses the Short while its tab is not the one being looked at, and resumes it on return."
+  },
   "languageLabel": {
     "message": "Language",
     "description": "Label for the dropdown choosing the popup's language."

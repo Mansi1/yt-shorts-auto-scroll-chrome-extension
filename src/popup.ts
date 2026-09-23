@@ -14,6 +14,7 @@
   const delayMs = $<HTMLInputElement>("delayMs");
   const playbackRate = $<HTMLSelectElement>("playbackRate");
   const skipSeen = $<HTMLInputElement>("skipSeen");
+  const pauseInBackground = $<HTMLInputElement>("pauseInBackground");
   const language = $<HTMLSelectElement>("language");
   const status = $<HTMLParagraphElement>("status");
 
@@ -53,6 +54,7 @@
     // A stored speed with no matching <option> would leave the select blank.
     if (!playbackRate.value) playbackRate.value = String(DEFAULT_SETTINGS.playbackRate);
     skipSeen.checked = s.skipSeen;
+    pauseInBackground.checked = s.pauseInBackground;
     // Chrome's i18n has no plural rules, so the two forms are separate keys.
     playCountUnit.textContent = t(
       s.playCount === 1 ? "playCountUnitOne" : "playCountUnitOther"
@@ -67,6 +69,7 @@
       playCount: clamp(playCount, DEFAULT_SETTINGS.playCount),
       delayMs: clamp(delayMs, DEFAULT_SETTINGS.delayMs),
       skipSeen: skipSeen.checked,
+      pauseInBackground: pauseInBackground.checked,
       playbackRate: Number(playbackRate.value) || DEFAULT_SETTINGS.playbackRate,
       language: language.value
     };
@@ -82,7 +85,15 @@
 
   void loadSettings().then(show);
 
-  for (const input of [enabled, playCount, delayMs, playbackRate, skipSeen, language]) {
+  for (const input of [
+    enabled,
+    playCount,
+    delayMs,
+    playbackRate,
+    skipSeen,
+    pauseInBackground,
+    language
+  ]) {
     input.addEventListener("change", save);
   }
 })();

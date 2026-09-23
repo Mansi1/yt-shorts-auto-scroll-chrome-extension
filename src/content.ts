@@ -32,6 +32,7 @@
   let lastAdvance = 0;
   let pendingAdvance: number | undefined;
   let pendingJump: number | undefined;
+  let pausedInBackground: HTMLVideoElement | null = null; // what we paused on hide
 
   let seenIds: string[] = []; // watched Short ids, oldest first
   let seenSet = new Set<string>();
@@ -286,6 +287,31 @@
     applyRate();
   }
 
+  /* ------------------------------------------------------- background tabs */
+
+  /**
+   * With "pause in background" on, hiding the tab pauses the Short, which
+   * also stops it finishing and advancing; showing the tab again resumes it.
+   * Only a video we paused is resumed, so one the user paused stays paused.
+   */
+  function onVisibilityChange(): void {
+    if (document.hidden) {
+      if (!settings.enabled || !settings.pauseInBackground || !onShorts()) return;
+      clearTimeout(pendingAdvance);
+      clearTimeout(pendingJump);
+      const v = video ?? getActiveVideo();
+      if (v && !v.paused) {
+        v.pause();
+        pausedInBackground = v;
+      }
+      return;
+    }
+
+    const v = pausedInBackground;
+    pausedInBackground = null;
+    if (v?.isConnected && v.paused) void v.play().catch(() => undefined);
+  }
+
   /* ------------------------------------------------------------------- loop */
 
   function tick(): void {
@@ -330,6 +356,7 @@
 
   setInterval(tick, POLL_MS);
   document.addEventListener("yt-navigate-finish", tick);
+  document.addEventListener("visibilitychange", onVisibilityChange);
   addEventListener("wheel", onWheel, { capture: true, passive: true });
   addEventListener("keydown", onKeyDown, true);
   tick();
@@ -361,6 +388,9 @@
     if (changes.playCount) settings.playCount = Number(changes.playCount.newValue);
     if (changes.delayMs) settings.delayMs = Number(changes.delayMs.newValue);
     if (changes.skipSeen) settings.skipSeen = Boolean(changes.skipSeen.newValue);
+    if (changes.pauseInBackground) {
+      settings.pauseInBackground = Boolean(changes.pauseInBackground.newValue);
+    }
     if (changes.playbackRate) {
       settings.playbackRate = Number(changes.playbackRate.newValue);
       applyRate();

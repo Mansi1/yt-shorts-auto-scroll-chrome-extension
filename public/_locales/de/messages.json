@@ -38,6 +38,9 @@
   "skipSeenLabel": {
     "message": "Gesehene Shorts überspringen"
   },
+  "pauseInBackgroundLabel": {
+    "message": "Im Hintergrund pausieren"
+  },
   "languageLabel": {
     "message": "Sprache"
   },

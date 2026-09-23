@@ -34,6 +34,7 @@ Click the toolbar icon:
 | Wait before scrolling | 0 ms | Pause between the finish and the scroll |
 | Playback speed | 1x | Speed every Short plays at, 0.75x - 2x |
 | Skip Shorts I've seen | off | Jump straight past a Short that has played before |
+| Pause in background tabs | off | Pause the Short while its tab is hidden, resume on return |
 | Language | Browser language | Language of the popup itself; see Translations |
 
 Settings live in `chrome.storage.sync`, so they follow your Chrome profile and
@@ -83,6 +84,11 @@ out of reach of the content script's isolated world, so `src/page-sequence.ts`
 runs in the page's world and copies them onto `<html>` when asked. With "skip
 seen" on, the first unwatched id is chosen; with no sequence available, it
 loads a fresh `/shorts` feed.
+
+With "pause in background tabs" on, none of that happens: hiding the tab
+pauses the Short, so it never finishes or advances, and showing the tab again
+resumes it. Only a Short the extension paused is resumed - one you paused
+yourself stays paused.
 
 ## Translations
 

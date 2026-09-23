@@ -14,6 +14,8 @@ interface Settings {
   delayMs: number;
   /** Skip past Shorts that have already been seen instead of replaying them. */
   skipSeen: boolean;
+  /** Pause the Short while its tab is in the background, resuming on return. */
+  pauseInBackground: boolean;
   /** Playback speed applied to every Short, e.g. 1.5 for 1.5x. */
   playbackRate: number;
   /**
@@ -29,6 +31,7 @@ const DEFAULT_SETTINGS: Settings = {
   playCount: 1,
   delayMs: 0,
   skipSeen: false,
+  pauseInBackground: false,
   playbackRate: 1,
   language: "auto"
 };
