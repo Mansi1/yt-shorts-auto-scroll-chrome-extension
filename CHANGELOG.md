@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/compare/v1.3.0...v1.4.0) (2026-10-11)
+
+### Features
+
+* never start a Short that will be skipped ([6038aa0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/commit/6038aa08f40838696803dba9a1b85885b2c3b389))
+
 ## [1.3.0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/compare/v1.2.0...v1.3.0) (2026-10-11)
 
 ### Features
