@@ -7,8 +7,9 @@
  *   2. a jump backwards to the start from within NEAR_END seconds of the end,
  *      which is what a loop looks like from the outside.
  *
- * Every Short reached is recorded by video id; with "skip seen" on, landing on
- * a recorded id advances again straight away instead of replaying it.
+ * A Short is recorded by video id once it played past its first and through
+ * its last SEEN_EDGE seconds; with "skip seen" on, landing on a recorded id
+ * advances again straight away instead of replaying it.
  *
  * In a background tab YouTube can sit on the "next" request until the tab is
  * shown again, so there the next Short's URL is loaded directly instead.
@@ -38,6 +39,7 @@
   let seenSet = new Set<string>();
   let seenReady = false; // history loaded - writing before this would erase it
   let skips = 0; // seen Shorts jumped in a row
+  let progress = newProgress(); // how much of the current Short has played
 
   let trail: string[] = []; // Shorts visited in this tab, in order
   let trailIndex = -1; // where in that trail we are now
@@ -123,7 +125,7 @@
 
     // The reload restarts this script, so the usual record-on-leaving in tick()
     // would never run for the Short we are on.
-    if (current) remember(current);
+    if (current) rememberIfWatched(current);
     location.assign(next ? `/shorts/${next}` : "/shorts");
   }
 
@@ -157,6 +159,16 @@
   }
 
   /* ------------------------------------------------------------- seen Shorts */
+
+  /**
+   * Records the Short being left if it was actually watched: played past its
+   * opening seconds and into its closing ones. Scrolling past one early, or
+   * skipping a seen one, leaves it unrecorded.
+   * VERIFIED: e2e/run.mjs leaves a Short after about 2 s and finds it unrecorded.
+   */
+  function rememberIfWatched(id: string): void {
+    if (watchedThrough(progress)) remember(id);
+  }
 
   /** Records a Short as watched, dropping the oldest ids once full. */
   function remember(id: string): void {
@@ -248,6 +260,7 @@
     if (!video) return;
     const now = video.currentTime;
     const duration = video.duration;
+    trackProgress(progress, now, duration);
 
     // A loop: we were near the end and the clock jumped back to the start.
     if (
@@ -262,6 +275,7 @@
   }
 
   function onEnded(): void {
+    progress.reachedEnd = true;
     finished();
   }
 
@@ -316,7 +330,8 @@
 
   function tick(): void {
     if (!onShorts()) {
-      if (shortId) remember(shortId); // leaving the feed finishes that Short
+      if (shortId) rememberIfWatched(shortId); // leaving the feed also leaves that Short
+      progress = newProgress();
       detach();
       shortId = null;
       return;
@@ -332,7 +347,8 @@
       // A Short counts as seen once you move off it, not when you land on it.
       // Marking on arrival meant the one you were watching was already in the
       // history, so scrolling back up to it would skip it away again.
-      if (shortId) remember(shortId);
+      if (shortId) rememberIfWatched(shortId);
+      progress = newProgress();
 
       const backwards = id ? stepTrail(id) : false;
       shortId = id;
