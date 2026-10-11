@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/compare/v1.2.0...v1.3.0) (2026-10-11)
+
+### Features
+
+* count a Short as seen only once its first and last 3 seconds played ([7066644](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/commit/70666447470a26386ffebdc9d1a57bbc017f4d93))
+
 ## [1.2.0](https://github.com/Mansi1/yt-shorts-auto-scroll-chrome-extension/compare/v1.1.0...v1.2.0) (2026-09-23)
 
 ### Features

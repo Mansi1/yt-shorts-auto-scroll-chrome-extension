@@ -1,6 +1,6 @@
 {
   "name": "yt-shorts-scroller",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Chrome extension that scrolls to the next YouTube Short when the current one finishes.",
   "author": "Michael Mannseicher",
   "license": "MIT",
