@@ -1,0 +1,12 @@
+{
+  // src/ compiles to classic scripts that share one global scope across files
+  // (tsconfig "module": "none"), so a declaration used only by another file
+  // looks unused to a per-file linter. tsc's noUnusedLocals checks this with
+  // the whole program in view instead.
+  "overrides": [
+    {
+      "files": ["src/**/*.ts"],
+      "rules": { "no-unused-vars": "off" }
+    }
+  ]
+}

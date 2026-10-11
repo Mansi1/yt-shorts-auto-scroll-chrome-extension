@@ -22,6 +22,8 @@ Then in Chrome:
 `npm run watch` copies the static files once and then recompiles TypeScript on
 save; press reload on the extension card and refresh the tab to pick up changes.
 `npm run typecheck` checks types without emitting.
+`make verify` runs lint, the unit tests and an end-to-end run of the built
+extension in Chromium (`make setup` installs the browser); `make` lists every verb.
 
 ## Options
 
@@ -60,7 +62,9 @@ Shorts is a single-page app that swaps video elements as you scroll.
 
 A Short is recorded by the video id in its URL once you move off it, not when
 you land on it - marking it on arrival would put the Short you are currently
-watching straight into the history. With "skip seen" on, arriving at an id that
+watching straight into the history. It only counts if it played past its first
+3 seconds and into its last 3 seconds (its midpoint, for a Short under 6
+seconds), so one you scroll past early stays unseen. With "skip seen" on, arriving at an id that
 is already in the history advances again immediately instead of playing it, at
 most 25 in a row, so a feed of nothing but repeats stops rather than scrolling
 forever.

@@ -2,3 +2,12 @@ node_modules/
 dist/
 .DS_Store
 *.zip
+.env
+var/*
+tmp/*
+output/*
+input/*
+.agents/SWARM_STATUS.yaml
+.agents/__pycache__/
+coverage/
+.cache/
