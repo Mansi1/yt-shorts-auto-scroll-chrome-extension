@@ -22,6 +22,8 @@ Then in Chrome:
 `npm run watch` copies the static files once and then recompiles TypeScript on
 save; press reload on the extension card and refresh the tab to pick up changes.
 `npm run typecheck` checks types without emitting.
+`make verify` runs lint, the unit tests and an end-to-end run of the built
+extension in Chromium (`make setup` installs the browser); `make` lists every verb.
 
 ## Options
 
