@@ -30,7 +30,7 @@
     {
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
       "js": ["settings.js", "watch-progress.js", "content.js"],
-      "run_at": "document_idle",
+      "run_at": "document_start",
       "all_frames": false
     }
   ]

@@ -11,6 +11,10 @@
  * its last SEEN_EDGE seconds; with "skip seen" on, landing on a recorded id
  * advances again straight away instead of replaying it.
  *
+ * Every advance pauses the Short being left, and the next Short we stay on is
+ * played again. The skip decision runs the moment any Short starts playing,
+ * so one that will be skipped is paused before it is heard.
+ *
  * In a background tab YouTube can sit on the "next" request until the tab is
  * shown again, so there the next Short's URL is loaded directly instead.
  */
@@ -34,6 +38,8 @@
   let pendingAdvance: number | undefined;
   let pendingJump: number | undefined;
   let pausedInBackground: HTMLVideoElement | null = null; // what we paused on hide
+  let held = false; // we paused playback to advance; the next Short we keep plays again
+  let heldAt = 0; // when that hold began
 
   let seenIds: string[] = []; // watched Short ids, oldest first
   let seenSet = new Set<string>();
@@ -129,20 +135,41 @@
     location.assign(next ? `/shorts/${next}` : "/shorts");
   }
 
+  /** Plays the Short we landed on if we paused playback to get there. */
+  function resumeHeld(v: HTMLVideoElement): void {
+    if (!held) return;
+    held = false;
+    if (document.hidden && settings.pauseInBackground) {
+      pausedInBackground = v; // the return to the tab resumes it
+      return;
+    }
+    if (v.paused) void v.play().catch(() => undefined);
+  }
+
   /**
-   * Moves to the next Short. A hidden tab paints no frames, and YouTube can
-   * wait for one before it swaps Shorts, looping the current one until the
-   * tab is shown again. If that happens, fall back to loading the next URL.
+   * Moves to the next Short, pausing the one we leave first so it stops
+   * playing while the next loads; tick() plays the next one unless it is
+   * skipped too. Pausing rather than muting leaves the user's volume
+   * untouched. VERIFIED: e2e/run.mjs fails when the pause or the resume is removed.
+   *
+   * A hidden tab paints no frames, and YouTube can wait for one before it
+   * swaps Shorts, looping the current one until the tab is shown again. If
+   * that happens, fall back to loading the next URL. HYPOTHESIS: a visible tab
+   * that has not moved after JUMP_MS reached the end of the feed, so the paused
+   * Short plays on rather than staying stuck.
    */
   function advance(): void {
+    const leaving = getActiveVideo() ?? video;
+    leaving?.pause();
+    held = true;
+    heldAt = Date.now();
     goNext();
     clearTimeout(pendingJump);
-    if (!document.hidden) return;
     const from = currentShortId();
     pendingJump = setTimeout(() => {
-      if (document.hidden && settings.enabled && onShorts() && currentShortId() === from) {
-        jumpToNext();
-      }
+      if (!settings.enabled || !onShorts() || currentShortId() !== from) return;
+      if (document.hidden) jumpToNext();
+      else if (leaving?.isConnected) resumeHeld(leaving);
     }, JUMP_MS);
   }
 
@@ -332,6 +359,7 @@
     if (!onShorts()) {
       if (shortId) rememberIfWatched(shortId); // leaving the feed also leaves that Short
       progress = newProgress();
+      held = false;
       detach();
       shortId = null;
       return;
@@ -339,6 +367,15 @@
 
     const active = getActiveVideo();
     if (!active) return;
+
+    // Until the history loads we cannot tell whether this Short gets skipped,
+    // so it waits paused; the load re-runs tick() to decide.
+    if (!seenReady) {
+      active.pause();
+      held = true;
+      heldAt = Date.now();
+      return;
+    }
 
     const id = currentShortId();
     const isNewShort = id !== shortId;
@@ -365,12 +402,31 @@
         return;
       }
       skips = 0;
+      resumeHeld(active);
     }
 
     if (active !== video || isNewShort) attach(active);
   }
 
+  /**
+   * Decides on a Short as it starts playing instead of on the next poll or
+   * yt-navigate-finish, so one about to be skipped never plays. Pausing on
+   * "play" beats muting: the user's volume stays untouched and the Short does
+   * not advance its clock. VERIFIED: e2e/run.mjs, whose navigate event lags
+   * the swap, fails without this listener.
+   * While we hold playback for an advance, anything tick() did not resume
+   * stays paused - for JUMP_MS at most, since a cancelled fallback timer would
+   * otherwise leave held set and block the user's own play button. HYPOTHESIS: YouTube can start the next Short before the URL
+   * names it; falsifier: log location.pathname on "play" in a real feed.
+   */
+  function onPlay(e: Event): void {
+    if (!onShorts() || !(e.target instanceof HTMLVideoElement)) return;
+    tick();
+    if (held && Date.now() - heldAt < JUMP_MS && !e.target.paused) e.target.pause();
+  }
+
   setInterval(tick, POLL_MS);
+  document.addEventListener("play", onPlay, true); // "play" does not bubble
   document.addEventListener("yt-navigate-finish", tick);
   document.addEventListener("visibilitychange", onVisibilityChange);
   addEventListener("wheel", onWheel, { capture: true, passive: true });
