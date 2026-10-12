@@ -3,12 +3,16 @@
  *
  * The extension is loaded unpacked, the way a user installs it. youtube.com is
  * answered by a stand-in Shorts page (served via request routing, so the
- * content scripts inject exactly as on the real site): a player in an active
- * ytd-reel-video-renderer and a "next" chevron that swaps Shorts in place with
- * pushState, as YouTube's single-page app does. Media is a silent WAV, which a
- * <video> element plays with real timing and "ended" events. Like YouTube,
- * the player autoplays every Short it swaps in, and the page logs each Short
- * that actually reached "playing", so a skipped Short that started shows up.
+ * content scripts inject exactly as on the real site): one reused <video> and
+ * a "next" chevron that swaps Shorts in place with pushState, as YouTube's
+ * single-page app does. Media is a silent WAV, which a <video> element plays
+ * with real timing and "ended" events.
+ *
+ * VERIFIED (probed on youtube.com/shorts, 2026-10-12): the player carries no
+ * is-active attribute; a swap starts the next Short playing about 80 ms before
+ * the URL names it; and a Short paused before it reaches "playing" is left
+ * paused above the viewport. The stand-in page does the same, so an extension
+ * that pauses a Short mid-load gets stuck here as it does on YouTube.
  *
  * VERIFIED: the "left within its first 3 seconds" check fails against a build
  * that records every Short left (probed by forcing watchedThrough to true).
@@ -54,14 +58,14 @@ function silentWav(seconds) {
 }
 
 // The feed: id -> length in seconds.
-const FEED = { shortAAAAAA: 6, shortBBBBBB: 20, shortCCCCCC: 20, shortDDDDDD: 20, shortEEEEEE: 20 };
+const FEED = { shortAAAAAA: 6, shortBBBBBB: 20, shortCCCCCC: 20, shortDDDDDD: 20, shortEEEEEE: 6 };
 const ORDER = Object.keys(FEED);
 
 const shortsPage = `<!doctype html>
 <html><head><meta charset="utf-8"><title>Shorts</title></head>
 <body style="margin:0">
   <ytd-shorts>
-    <ytd-reel-video-renderer is-active>
+    <ytd-reel-video-renderer>
       <video muted playsinline style="display:block;width:360px;height:640px"></video>
     </ytd-reel-video-renderer>
     <div id="navigation-button-down"><button>next</button></div>
@@ -70,23 +74,28 @@ const shortsPage = `<!doctype html>
     const order = ${JSON.stringify(ORDER)};
     const lengths = ${JSON.stringify(FEED)};
     const video = document.querySelector("video");
-    window.played = []; // Shorts that reached "playing", in order
-    let loaded = null;
-    video.addEventListener("playing", () => window.played.push(loaded));
+    let started = false; // the loaded Short reached "playing"
+    window.advances = []; // { from, paused } at each chevron click
+    video.addEventListener("playing", () => { started = true; });
     const load = (id) => {
-      loaded = id;
+      started = false;
+      video.style.marginTop = "0";
       video.src = "/media/" + id + "-" + lengths[id] + ".wav";
       video.play().catch(() => {});
     };
     load(location.pathname.split("/")[2]);
     document.querySelector("#navigation-button-down button").addEventListener("click", () => {
-      const next = order[order.indexOf(location.pathname.split("/")[2]) + 1];
+      const from = location.pathname.split("/")[2];
+      window.advances.push({ from, paused: video.paused });
+      const next = order[order.indexOf(from) + 1];
       if (!next) return;
-      history.pushState({}, "", "/shorts/" + next);
       load(next);
-      // Arrives after the swap has started playing, so the extension cannot
-      // rely on it (or its 400 ms poll) to stop a Short it will skip.
-      setTimeout(() => document.dispatchEvent(new Event("yt-navigate-finish")), 500);
+      setTimeout(() => {
+        // Paused while still loading: parked above the viewport, as on YouTube.
+        if (video.paused && !started) video.style.marginTop = "-700px";
+        history.pushState({}, "", "/shorts/" + next);
+        document.dispatchEvent(new Event("yt-navigate-finish"));
+      }, 80);
     });
   </script>
 </body></html>`;
@@ -170,11 +179,6 @@ try {
 
   const shorts = await context.newPage();
   watchConsole(shorts);
-  /** Throws if the Short `id` ever started playing on the current page. */
-  const assertNeverPlayed = async (id) => {
-    const played = await shorts.evaluate(() => window.played);
-    if (played.includes(id)) throw new Error(`${id} started playing: ${JSON.stringify(played)}`);
-  };
   const playing = () =>
     shorts.evaluate(() => {
       const v = document.querySelector("video");
@@ -218,20 +222,33 @@ try {
     if (ids.includes("shortBBBBBB")) throw new Error(`shortBBBBBB recorded as seen: ${JSON.stringify(ids)}`);
   });
 
-  await check("scrolling onto a seen Short skips it without it ever playing", async () => {
+  await check("scrolling onto a seen Short skips it and the next one plays", async () => {
     const ids = await seen();
     await popup.evaluate((next) => chrome.storage.local.set({ seenShorts: next }), [...ids, "shortDDDDDD"]);
     await shorts.click("#navigation-button-down button");
     await waitFor(async () => currentId() === "shortEEEEEE", "skip past the seen shortDDDDDD", 5000);
     await waitFor(playing, "shortEEEEEE playing after the skip", 5000);
-    await assertNeverPlayed("shortDDDDDD");
+    const advances = await shorts.evaluate(() => window.advances);
+    const off = advances.find((a) => a.from === "shortDDDDDD");
+    if (!off?.paused) throw new Error(`shortDDDDDD still playing when skipped: ${JSON.stringify(advances)}`);
   });
 
-  await check("opening a seen Short skips it without it ever playing", async () => {
+  await check("the last Short in the feed plays on after its advance finds nothing", async () => {
+    // shortEEEEEE is 6 s long, so at 2x it ends within about 3 s; the fixture's
+    // media cannot be seeked.
+    await waitFor(
+      () => shorts.evaluate(() => window.advances.filter((a) => a.from === "shortEEEEEE").length > 0),
+      "an advance off shortEEEEEE",
+      10000
+    );
+    await waitFor(playing, "shortEEEEEE playing again", 5000);
+    if (currentId() !== "shortEEEEEE") throw new Error(`left the last Short for ${currentId()}`);
+  });
+
+  await check("opening a seen Short skips it and the next one plays", async () => {
     await shorts.goto("https://www.youtube.com/shorts/shortAAAAAA");
     await waitFor(async () => currentId() === "shortBBBBBB", "skip past the seen shortAAAAAA", 5000);
     await waitFor(playing, "shortBBBBBB playing after the skip", 5000);
-    await assertNeverPlayed("shortAAAAAA");
   });
 } finally {
   await context.close();

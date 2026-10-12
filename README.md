@@ -56,12 +56,12 @@ Shorts loop by default, so the `<video>` element normally never fires `ended`.
 
 To advance it clicks YouTube's own "next" chevron, falling back to an
 `ArrowDown` key event and then to scrolling the snap container by one viewport.
-It pauses the Short it leaves before advancing and plays the one it lands on
-unless that one is skipped too. The skip decision runs the moment a Short
-starts playing, and the content script loads before the page so it is in
-place for the first Short, which waits paused for the watched history to load;
-a Short that will be skipped is paused before it plays. If the feed has not
-moved 2s after an advance, the paused Short plays on. A short cooldown after each advance prevents double skips, and the active video
+It pauses the Short it leaves before advancing, so a seen Short stops before
+the feed moves past it, and plays the one it lands on if that one is paused.
+A seen Short can still play for a moment first: YouTube starts the next Short
+before its URL names it, and pausing a Short while it loads leaves YouTube's
+player stuck. If the feed has not moved 2s after an advance, the paused Short
+plays on. A short cooldown after each advance prevents double skips, and the active video
 is re-detected on a 400ms poll plus YouTube's `yt-navigate-finish` event, since
 Shorts is a single-page app that swaps video elements as you scroll.
 
